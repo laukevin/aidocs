@@ -1,0 +1,188 @@
+# aidocs Hooks Configuration Template
+# Place this file at .aidocs/config.yaml to enable Claude Code integration
+
+hooks:
+  # Triggered when Claude starts analyzing or exploring code
+  before_code_analysis: |
+    Before analyzing unfamiliar code, check existing documentation:
+
+    ```bash
+    aidocs search "<relevant-keywords>"
+    aidocs show <relevant-concept>
+    aidocs list  # See what's already documented
+    ```
+
+    This helps you understand current architecture before making changes.
+
+  # Triggered when Claude is planning or scoping work
+  planning_phase: |
+    When planning new features or significant changes:
+
+    ```bash
+    # Search for related concepts
+    aidocs search "<feature-area>"
+    aidocs search "<technology-stack>"
+
+    # Check past architectural decisions
+    aidocs why "<related-topic>"
+    aidocs why "<technology-choice>"
+
+    # Review existing patterns
+    aidocs show <similar-concepts>
+    ```
+
+    Plan your approach based on existing architecture and decisions.
+
+  # Triggered when Claude makes architectural decisions
+  decision_making: |
+    When making architectural choices, record them immediately:
+
+    ```bash
+    aidocs record-decision "<concept>" \
+      "<decision-question>" \
+      "<your-rationale>"
+    ```
+
+    Examples:
+    - Database choice and reasoning
+    - API design patterns
+    - Security approaches
+    - Performance trade-offs
+
+  # Triggered during active development/implementation
+  during_implementation: |
+    As you discover and understand code patterns:
+
+    ```bash
+    # Document new concepts you learn about
+    aidocs store "<concept-name>" \
+      "<brief-description>" \
+      "<detailed-content>"
+
+    # Add progress updates to existing docs
+    aidocs append "<concept>" "<progress-update>"
+
+    # Record decisions made during coding
+    aidocs record-decision "<concept>" "<decision>" "<rationale>"
+    ```
+
+  # Triggered when Claude completes a significant piece of work
+  after_implementation: |
+    After completing features or making significant changes:
+
+    ```bash
+    # Update existing documentation
+    aidocs store "<concept>" \
+      "<updated-description>" \
+      "<updated-content>" \
+      --update
+
+    # Document new patterns or components created
+    aidocs store "<new-concept>" \
+      "<description>" \
+      "<implementation-details>"
+
+    # Add completion notes
+    aidocs append "<concept>" "Completed: <what-you-finished>"
+    ```
+
+  # Triggered when Claude encounters errors or debugging
+  debugging_session: |
+    When debugging or troubleshooting:
+
+    ```bash
+    # Search for related debugging info
+    aidocs search "debugging"
+    aidocs search "<error-keywords>"
+
+    # Check if this issue was solved before
+    aidocs why "<problem-area>"
+
+    # Document solutions for future reference
+    aidocs store "<problem-concept>" \
+      "<problem-description>" \
+      "
+    ## Problem
+    <describe the issue>
+
+    ## Solution
+    <describe how it was fixed>
+
+    ## Prevention
+    <how to avoid this in future>
+    "
+    ```
+
+  # Triggered before major refactoring
+  refactoring_prep: |
+    Before major refactoring or architectural changes:
+
+    ```bash
+    # Understand current architecture thoroughly
+    aidocs search "<area-to-refactor>"
+    aidocs show <relevant-concepts>
+
+    # Check why current approach was chosen
+    aidocs why "<current-pattern>"
+    aidocs why "<technology-choice>"
+
+    # Document the refactoring plan
+    aidocs store "<refactor-concept>" \
+      "Refactoring plan for <area>" \
+      "
+    ## Current State
+    <describe current implementation>
+
+    ## Issues
+    <why refactoring is needed>
+
+    ## Proposed Solution
+    <new approach>
+
+    ## Migration Plan
+    <step-by-step approach>
+    "
+    ```
+
+# Integration settings
+settings:
+  # Auto-prompt for documentation when certain keywords appear
+  auto_prompt_keywords:
+    - "architecture"
+    - "design decision"
+    - "implementation approach"
+    - "database schema"
+    - "API design"
+    - "security model"
+    - "performance optimization"
+
+  # Suggest searches when these patterns are detected
+  search_suggestions:
+    - pattern: "authentication"
+      suggest: "aidocs search 'auth'"
+    - pattern: "database"
+      suggest: "aidocs search 'database'"
+    - pattern: "caching"
+      suggest: "aidocs search 'cache'"
+    - pattern: "API"
+      suggest: "aidocs search 'api'"
+
+# Example workflow integration
+workflow_examples:
+  new_feature_development: |
+    1. Search existing patterns: `aidocs search "<feature-type>"`
+    2. Review related decisions: `aidocs why "<related-area>"`
+    3. Document your approach: `aidocs store "<feature-concept>" "<desc>" "<plan>"`
+    4. Record decisions: `aidocs record-decision "<concept>" "<decision>" "<why>"`
+    5. Update docs: `aidocs store "<concept>" "<desc>" "<final-impl>" --update`
+
+  bug_investigation: |
+    1. Search for related info: `aidocs search "<bug-area>"`
+    2. Check past solutions: `aidocs why "<problem-type>"`
+    3. Document the bug: `aidocs store "<bug-concept>" "<desc>" "<investigation>"`
+    4. Record solution: `aidocs append "<concept>" "Fixed: <solution>"`
+
+  code_review: |
+    1. Search patterns: `aidocs search "<code-area>"`
+    2. Check standards: `aidocs show <relevant-concepts>`
+    3. Document feedback: `aidocs append "<concept>" "Review notes: <feedback>"`
