@@ -26,10 +26,10 @@
 
 ```bash
 # Install with uv (recommended)
-uv tool install git+https://github.com/anthropics/aidocs.git
+uv tool install git+https://github.com/laukevin/aidocs.git
 
 # Or with pip
-pip install git+https://github.com/anthropics/aidocs.git
+pip install git+https://github.com/laukevin/aidocs.git
 ```
 
 ### Project Setup

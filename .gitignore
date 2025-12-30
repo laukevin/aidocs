@@ -70,6 +70,12 @@ Thumbs.db
 # Beads (development coordination)
 .beads/
 
+# Internal coordination files
+COORDINATION_INSTRUCTIONS.md
+NEW_AGENT_INSTRUCTIONS.md
+AGENTS.md
+tasks.md
+
 # Temporary files
 *.tmp
 *.temp
