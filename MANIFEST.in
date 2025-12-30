@@ -1,0 +1,12 @@
+# Include additional files in the package
+include README.md
+include LICENSE
+include CHANGELOG.md
+include scripts/*.sh
+recursive-include claude_code_integration *.md *.yaml
+recursive-include examples *.py *.js *.json *.md
+recursive-exclude examples *.db
+recursive-exclude . *.pyc
+recursive-exclude . __pycache__
+recursive-exclude . .aidocs
+recursive-exclude . .beads

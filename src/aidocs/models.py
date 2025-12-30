@@ -29,8 +29,8 @@ class Doc:
         if not self.description.strip():
             raise ValueError("Description cannot be empty")
 
-        if not self.content.strip():
-            raise ValueError("Content cannot be empty")
+        # Content can be empty for metadata-only operations (list, search)
+        # Full content is loaded on demand from files
 
     @staticmethod
     def is_valid_name(name: str) -> bool:

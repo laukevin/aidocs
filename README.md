@@ -1,348 +1,257 @@
 # aidocs - AI-Native Architecture Documentation
 
-> **Semantic grep for architecture** - A CLI tool designed for AI agents to store, search, and manage architecture documentation.
+> **Semantic grep for architecture** - A CLI tool designed for AI agents to store, search, and manage architecture documentation with git-based version history.
 
-## Overview
+## What is aidocs?
 
-`aidocs` solves the problem of AI agents having to rediscover architecture patterns every time they work on a codebase. Instead of starting from scratch, AI agents can:
+`aidocs` solves the problem of AI agents having to rediscover architecture patterns every session. Instead of starting from scratch, AI agents can:
 
-- 🔍 **Search existing documentation** before making changes
-- 📝 **Store architectural findings** as they explore code
-- 🎯 **Record decisions** with rationale for future reference
-- 📈 **Track documentation evolution** over time
+- **Search existing docs** before making changes
+- **Store architectural findings** as they explore code
+- **Record decisions** with rationale for future reference
+- **Track documentation evolution** via git history
 
-## Key Features
+## How It Works
 
-- **AI-Optimized**: Commands designed for AI workflow patterns
-- **Semantic Search**: Find relevant docs by keywords, not exact names
-- **Version History**: Track how architecture evolves over time
-- **Decision Tracking**: Record architectural decisions with rationale
-- **Hierarchical Organization**: Use dotted names like `auth.jwt.middleware`
-- **Local Storage**: Everything stored in `.aidocs/` - no external dependencies
+- Docs are stored as markdown files in `.aidocs/docs/`
+- `.aidocs/` has its own git repo for version history (separate from your project)
+- SQLite stores metadata index for fast search
+- AI reads/edits files directly, then commits changes
 
-## Quick Start
+---
+
+## For Humans: Setup Guide
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd aidocs
-
 # Install with uv (recommended)
-uv pip install -e .
+uv tool install git+https://github.com/anthropics/aidocs.git
 
 # Or with pip
-pip install -e .
+pip install git+https://github.com/anthropics/aidocs.git
 ```
 
-### Basic Usage
+### Project Setup
+
+Run this once in each repo where you want aidocs:
 
 ```bash
-# Initialize in your project
-aidocs init
-
-# Store architecture documentation
-aidocs store "auth.jwt" \
-  "JWT authentication system" \
-  "Handles token generation and validation for API authentication..."
-
-# Search for documentation
-aidocs search "authentication"
-aidocs search "jwt tokens"
-
-# Read specific documentation
-aidocs show auth.jwt
-
-# List all documented concepts
-aidocs list
-
-# Record architectural decisions
-aidocs record-decision "auth.jwt" \
-  "Token expiration strategy" \
-  "15-minute expiration for security vs usability balance"
+cd your-project
+aidocs setup
 ```
 
-## Core Commands
+This does three things:
+1. Creates `.aidocs/` directory with its own git repo
+2. Adds `.aidocs/` to `.gitignore` (never touches your main repo)
+3. Installs Claude Code hooks for automatic context
+
+Then **restart Claude Code**. The AI will automatically use aidocs during planning - you don't need to run commands manually.
+
+### Verify Installation
+
+```bash
+aidocs doctor   # Check everything is configured
+```
+
+### Manual Usage (Optional)
+
+While aidocs is designed for AI use, humans can also use it:
+
+```bash
+# See what's documented
+aidocs list
+aidocs search "authentication"
+
+# Read a doc
+aidocs show auth.overview
+# Then open the file path shown
+
+# Check status
+aidocs status
+```
+
+---
+
+## For AI Models: Usage Guide
+
+### When to Use aidocs
+
+| Phase | Action | Why |
+|-------|--------|-----|
+| **PLANNING/RESEARCH** | Read AND Write docs | Capture discoveries, create plans |
+| **IMPLEMENTING** | Read docs only | Reference existing plans, don't create new docs |
+
+### Core Workflow
+
+#### Step 1: Search Before Working
+```bash
+aidocs search "<topic>"    # Search by name/description
+aidocs list                # See all documented concepts
+```
+
+#### Step 2: Read a Doc
+```bash
+aidocs show <name>         # Returns file path
+```
+Then use your **Read tool** on that file path to view content.
+
+#### Step 3: Create NEW Doc
+If no relevant doc exists:
+```bash
+aidocs store <name> "<description>" "<initial content>"
+```
+Names use dot-hierarchy: `arch.overview`, `api.auth`, `plan.feature-x`
+
+#### Step 4: Edit EXISTING Doc
+```bash
+aidocs show <name>                    # 1. Get file path
+# Use Read tool to view               # 2. Read current content
+# Use Edit tool to modify             # 3. Make targeted changes
+aidocs commit <name> "<message>"      # 4. Commit with description
+```
+
+The commit message describes what changed. Git hash and date are recorded automatically.
+
+### What to Document
+
+**DO document:**
+- Major architecture patterns and decisions
+- Codebase layout and structure
+- Implementation plans before starting work
+- Key decisions with rationale
+
+**DON'T document:**
+- Small changes, constants, minor refactors
+- Obvious implementation details
+- Anything while actively implementing (read only)
+
+### Command Reference
 
 | Command | Purpose | Example |
 |---------|---------|---------|
-| `aidocs init` | Initialize .aidocs/ directory | `aidocs init` |
-| `aidocs store` | Create/update documentation | `aidocs store "api.users" "User endpoints" "REST API for user operations..."` |
-| `aidocs search` | Find relevant documentation | `aidocs search "caching"` |
-| `aidocs show` | Display specific documentation | `aidocs show auth.jwt` |
-| `aidocs list` | Overview of all concepts | `aidocs list` or `aidocs list --tree` |
-| `aidocs append` | Add notes to existing docs | `aidocs append "api.users" "Added pagination support"` |
-| `aidocs record-decision` | Record architectural decisions | `aidocs record-decision "database" "PostgreSQL vs MongoDB" "ACID compliance needed"` |
-| `aidocs why` | Search past decisions | `aidocs why "database choice"` |
-| `aidocs log` | View version history | `aidocs log auth.jwt` |
-| `aidocs status` | Project overview | `aidocs status` |
+| `search` | Find docs by keyword | `aidocs search "caching"` |
+| `list` | List all docs | `aidocs list` |
+| `show` | Get file path for reading | `aidocs show auth.jwt` |
+| `store` | Create new doc | `aidocs store "api.users" "User API" "..."` |
+| `commit` | Save changes to existing doc | `aidocs commit auth.jwt "Add rate limiting"` |
+| `log` | View version history | `aidocs log auth.jwt` |
+| `why` | Search past decisions | `aidocs why "database choice"` |
 
-## AI Workflow Integration
-
-### Claude Code Integration
-
-1. **Add the skill**: Copy `claude_code_integration/skill.md` to your Claude Code skills directory
-2. **Install hooks**: Copy `claude_code_integration/hooks_template.yaml` to `.aidocs/config.yaml` in your project
-3. **Start using**: Claude will be prompted to use aidocs at key moments
-
-### Typical AI Workflow
+### Example Session
 
 ```bash
-# 1. Before working - understand existing architecture
+# Planning phase - exploring codebase
 aidocs search "authentication"
-aidocs show auth.system
-aidocs why "token strategy"
+# No results - need to document
 
-# 2. During work - document discoveries
-aidocs store "auth.oauth.google" \
-  "Google OAuth integration" \
-  "OAuth2 flow with JWT token generation..."
+aidocs store auth.overview "Authentication system overview" "# Auth Overview
 
-# 3. Record decisions
-aidocs record-decision "auth.oauth" \
-  "OAuth provider choice" \
-  "Google first - largest user base"
+## Components
+- JWT tokens for API auth
+- OAuth2 for social login
+- Session middleware
 
-# 4. Update progress
-aidocs append "auth.oauth.google" "Integration completed, tests passing"
+## Key Files
+- src/auth/jwt.py - Token generation
+- src/auth/oauth.py - OAuth providers
+"
 
-# 5. Final documentation update
-aidocs store "auth.oauth.google" \
-  "Google OAuth integration (production ready)" \
-  "Complete OAuth2 implementation with error handling..." \
-  --update
+# Later - updating the doc
+aidocs show auth.overview
+# Read tool: /path/to/.aidocs/docs/auth/overview.md
+# Edit tool: Add new section about rate limiting
+aidocs commit auth.overview "Add rate limiting documentation"
+
+# Check history
+aidocs log auth.overview
+# Shows: hash | message | date for each version
 ```
 
-## Document Organization
+---
+
+## Architecture
+
+### Storage Model
+
+```
+your-project/
+├── .aidocs/              # Separate git repo
+│   ├── .git/             # Version history for docs
+│   ├── docs/             # Markdown files
+│   │   ├── arch/
+│   │   │   └── overview.md
+│   │   └── api/
+│   │       └── auth.md
+│   └── store.db          # Metadata index (gitignored)
+├── .gitignore            # Contains ".aidocs/"
+└── ... your code ...
+```
 
 ### Naming Conventions
 
-Use hierarchical naming with dots:
+Use hierarchical dot-notation:
 
-```bash
-# System overviews
-auth                    # Authentication system overview
-database               # Database architecture overview
-api                     # API structure overview
-
-# Specific components
+```
+arch.overview          # System architecture
 auth.jwt               # JWT implementation
-auth.oauth             # OAuth integration
-auth.middleware        # Authentication middleware
-
-# Detailed implementations
-auth.jwt.validation    # JWT validation logic
 auth.oauth.google      # Google OAuth specifics
-database.users.model   # User data model
-```
-
-### Document Structure
-
-Documents follow a flexible markdown structure:
-
-```markdown
-# concept-name
-
-## Description
-Brief one-line description for search results
-
-## Current State
-How this works right now
-
-## Architecture
-Key components, patterns, dependencies
-
-## Key Files
-Important files and their roles
-
-## Testing
-How to verify this works
-
-## Tools & Commands
-Relevant commands, scripts, deployment info
-
-## Recent Changes
-What changed recently and when
-
-## Decisions Made
-Key decisions with rationale and dates
-
-## Notes
-Additional context, gotchas, future considerations
-```
-
-## Advanced Usage
-
-### Search Strategies
-
-```bash
-# Technology-based search
-aidocs search "redis"
-aidocs search "postgresql"
-
-# Concept-based search
-aidocs search "rate limiting"
-aidocs search "user authentication"
-
-# Decision search
-aidocs why "performance"
-aidocs why "security model"
-
-# File-pattern search
-aidocs search "middleware"
-aidocs search "model"
+api.users              # User API endpoints
+plan.feature-x         # Implementation plan
 ```
 
 ### Version History
 
+Each doc change creates a git commit in `.aidocs/`:
+- Commit message = your `aidocs commit` message
+- Linked to main project's current commit hash
+- View with `aidocs log <name>`
+
+---
+
+## Hooks & Integration
+
+### Claude Code Hooks
+
+After `aidocs setup`, these hooks are configured:
+
+- **SessionStart**: Runs `aidocs prime` to inject documentation context
+- **PreCompact**: Re-injects context before summarization
+
+The `aidocs prime` command outputs nothing if `.aidocs/` doesn't exist, so it won't affect other projects.
+
+### Manual Hook Management
+
 ```bash
-# View document evolution
-aidocs log auth.jwt
-
-# Compare with previous versions (future feature)
-aidocs diff auth.jwt
+aidocs install-hooks    # Add hooks to Claude Code
+aidocs uninstall-hooks  # Remove hooks
+aidocs doctor           # Verify configuration
 ```
 
-### Bulk Operations
-
-```bash
-# List with tree view
-aidocs list --tree
-
-# Search with content preview
-aidocs search "caching" --show-content
-
-# Export documentation (future feature)
-aidocs export --format markdown
-```
-
-## Configuration
-
-### Project Configuration
-
-Create `.aidocs/config.yaml`:
-
-```yaml
-# See claude_code_integration/hooks_template.yaml for full options
-hooks:
-  before_code_analysis: |
-    aidocs search "<relevant-keywords>"
-    aidocs show <relevant-concept>
-```
-
-### Git Integration
-
-Add to `.gitignore`:
-
-```gitignore
-# aidocs (local documentation)
-.aidocs/
-```
-
-This keeps documentation local to each development environment, as it's designed to be personal AI memory rather than shared project documentation.
+---
 
 ## Development
 
-### Running Tests
+### Running from Source
 
 ```bash
-# Install development dependencies
-uv pip install -e ".[dev]"
-
-# Run tests
-pytest tests/
-
-# Run manual CLI test
-python test_cli_manual.py
+git clone https://github.com/anthropics/aidocs.git
+cd aidocs
+pip install -e .
 ```
 
 ### Project Structure
 
 ```
 aidocs/
-├── src/aidocs/          # Main package
+├── src/aidocs/
 │   ├── cli.py          # Click CLI interface
-│   ├── database.py     # SQLite operations
-│   ├── models.py       # Data classes
-│   └── utils.py        # Utility functions
-├── tests/              # Test suite
-├── claude_code_integration/  # Claude Code files
-│   ├── skill.md        # Claude Code skill documentation
-│   └── hooks_template.yaml  # Hooks configuration
-└── examples/           # Example projects
+│   ├── database.py     # SQLite + Git operations
+│   └── models.py       # Data classes
+├── tests/
+└── examples/
 ```
-
-## Philosophy
-
-### AI-First Design
-
-aidocs is built specifically for AI agents:
-
-- **Search-first interface**: AIs find docs by query, not memorized names
-- **Contextual commands**: Commands match AI workflow patterns
-- **Decision tracking**: Every "why" question gets an answer
-- **Evolution awareness**: Documentation tracks how things change over time
-
-### Local-First Approach
-
-- **No external dependencies**: Just SQLite in `.aidocs/`
-- **Version controlled**: Documentation evolves with code
-- **Privacy-focused**: Stays on your machine
-- **Fast access**: No network calls, instant search
-
-### Semantic Organization
-
-- **Hierarchical naming**: Natural organization with dots
-- **Flexible structure**: Markdown content adapts to needs
-- **Search-optimized**: Find docs by meaning, not exact terms
-- **Cross-references**: Link concepts naturally
-
-## Examples
-
-### Web Application Documentation
-
-```bash
-# System architecture
-aidocs store "architecture" "MERN stack web application" "React frontend, Express API, MongoDB database..."
-
-# Frontend documentation
-aidocs store "frontend.react" "React component architecture" "Feature-based organization with shared components..."
-aidocs store "frontend.state" "Redux state management" "Normalized state with feature-based reducers..."
-
-# Backend documentation
-aidocs store "backend.api" "Express REST API" "RESTful endpoints with JWT authentication..."
-aidocs store "backend.database" "MongoDB data layer" "User and content collections with relationships..."
-
-# Infrastructure
-aidocs store "deploy.docker" "Docker containerization" "Multi-stage build with nginx proxy..."
-```
-
-### Microservices Documentation
-
-```bash
-# Service overview
-aidocs store "services.overview" "Microservices architecture" "User, Content, and Analytics services..."
-
-# Individual services
-aidocs store "services.user" "User management service" "Authentication, profiles, preferences..."
-aidocs store "services.content" "Content management service" "CRUD operations for articles and media..."
-
-# Inter-service communication
-aidocs store "services.communication" "Service mesh with gRPC" "Protocol buffers for type-safe communication..."
-
-# Deployment
-aidocs store "deploy.kubernetes" "K8s deployment" "Helm charts with service discovery..."
-```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Add tests for new functionality
-4. Ensure all tests pass
-5. Submit a pull request
 
 ## License
 
-MIT License - see LICENSE file for details.
+MIT License

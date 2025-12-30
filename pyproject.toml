@@ -50,6 +50,10 @@ aidocs = "aidocs.cli:cli"
 Homepage = "https://github.com/anthropics/aidocs"
 Repository = "https://github.com/anthropics/aidocs"
 Issues = "https://github.com/anthropics/aidocs/issues"
+Documentation = "https://github.com/anthropics/aidocs/blob/main/README.md"
+
+[project.entry-points."aidocs.plugins"]
+# For future plugin system
 
 [tool.hatch.version]
 path = "src/aidocs/__init__.py"
